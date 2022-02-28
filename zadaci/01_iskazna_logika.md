@@ -2,7 +2,7 @@
 
 Rok za predaju:  *5.3.2022* \
 Naslov mejla:    *[AR] Domaći zadatak 01_iskazna_logika* \
-U prilogu mejla: *main.cpp*
+U prilogu mejla: *main.cpp (i ostale datoteke, ako ih ima)*
 
 U programskom jeziku C++ realizovati sledeće.
 
