@@ -31,20 +31,24 @@ struct Formula {
         Binary
     } type;
 
-    union Data {
+    union {
         AtomData atomData;
         NotData notData;
         BinaryData binaryData;
+    };
 
-        Data() {}
-        ~Data() {}
-    } data;
-
-    Formula(FalseData)    : type(False)  { }
-    Formula(TrueData)     : type(True)   { }
-    Formula(AtomData d)   : type(Atom)   { data.atomData = d; }
-    Formula(NotData d)    : type(Not)    { data.notData = d; }
-    Formula(BinaryData d) : type(Binary) { data.binaryData = d; }
+    Formula(FalseData)    : type(False)                 { }
+    Formula(TrueData)     : type(True)                  { }
+    Formula(AtomData d)   : type(Atom), atomData(d)     { }
+    Formula(NotData d)    : type(Not), notData(d)       { }
+    Formula(BinaryData d) : type(Binary), binaryData(d) { }
+    ~Formula() {
+        switch(type) {
+        case Not: notData.~NotData(); break;
+        case Binary: binaryData.~BinaryData(); break;
+        default: {}
+        }
+    }
 };
 
 FormulaPtr False() { return std::make_shared<Formula>(FalseData{}); }
@@ -54,18 +58,10 @@ FormulaPtr Not(FormulaPtr f) { return std::make_shared<Formula>(NotData{f}); }
 FormulaPtr Binary(BinaryData::Type t, FormulaPtr l, FormulaPtr r) {
     return std::make_shared<Formula>(BinaryData{t, l, r});
 }
-FormulaPtr And(FormulaPtr l, FormulaPtr r) {
-    return std::make_shared<Formula>(BinaryData{BinaryData::Type::And, l, r});
-}
-FormulaPtr Or(FormulaPtr l, FormulaPtr r) {
-    return std::make_shared<Formula>(BinaryData{BinaryData::Type::Or, l, r});
-}
-FormulaPtr Impl(FormulaPtr l, FormulaPtr r) {
-    return std::make_shared<Formula>(BinaryData{BinaryData::Type::Impl, l, r});
-}
-FormulaPtr Eql(FormulaPtr l, FormulaPtr r) {
-    return std::make_shared<Formula>(BinaryData{BinaryData::Type::Eql, l, r});
-}
+FormulaPtr And(FormulaPtr l, FormulaPtr r)  { return Binary(BinaryData::Type::And,  l, r); }
+FormulaPtr Or(FormulaPtr l, FormulaPtr r)   { return Binary(BinaryData::Type::Or,   l, r); }
+FormulaPtr Impl(FormulaPtr l, FormulaPtr r) { return Binary(BinaryData::Type::Impl, l, r); }
+FormulaPtr Eql(FormulaPtr l, FormulaPtr r)  { return Binary(BinaryData::Type::Eql,  l, r); }
 
 void printFormula(FormulaPtr formula) {
     switch(formula->type) {
@@ -73,26 +69,26 @@ void printFormula(FormulaPtr formula) {
     case Formula::Type::True:  std::cout << "T"; break;
 
     case Formula::Type::Atom:
-        std::cout << "p" << formula->data.atomData.n;
+        std::cout << "p" << formula->atomData.n;
         break;
 
     case Formula::Type::Not:
         std::cout << "~";
-        printFormula(formula->data.notData.f);
+        printFormula(formula->notData.f);
         break;
 
     case Formula::Type::Binary:
         std::cout << "(";
-        printFormula(formula->data.binaryData.l);
+        printFormula(formula->binaryData.l);
 
-        switch(formula->data.binaryData.type) {
+        switch(formula->binaryData.type) {
         case BinaryData::Type::And:  std::cout << " & "; break;
         case BinaryData::Type::Or:   std::cout << " | "; break;
         case BinaryData::Type::Impl: std::cout << " -> "; break;
         case BinaryData::Type::Eql:  std::cout << " <-> "; break;
         }
 
-        printFormula(formula->data.binaryData.r);
+        printFormula(formula->binaryData.r);
         std::cout << ")";
         break;
     }
@@ -105,10 +101,10 @@ unsigned complexity(FormulaPtr formula) {
     case Formula::Type::Atom:
         return 0;
     case Formula::Type::Not:
-        return 1 + complexity(formula->data.notData.f);
+        return 1 + complexity(formula->notData.f);
     case Formula::Type::Binary:
-        return 1 + complexity(formula->data.binaryData.l)
-                 + complexity(formula->data.binaryData.r);
+        return 1 + complexity(formula->binaryData.l)
+                 + complexity(formula->binaryData.r);
     }
 }
 
@@ -121,14 +117,14 @@ bool equal(FormulaPtr f, FormulaPtr g) {
     case Formula::Type::False:
         return true;
     case Formula::Type::Atom:
-        return f->data.atomData.n == g->data.atomData.n;
+        return f->atomData.n == g->atomData.n;
     case Formula::Type::Not:
-        return equal(f->data.notData.f, g->data.notData.f);
+        return equal(f->notData.f, g->notData.f);
     case Formula::Type::Binary:
-        if(f->data.binaryData.type != g->data.binaryData.type)
+        if(f->binaryData.type != g->binaryData.type)
             return false;
-        return equal(f->data.binaryData.l, g->data.binaryData.l) &&
-               equal(f->data.binaryData.r, g->data.binaryData.r);
+        return equal(f->binaryData.l, g->binaryData.l) &&
+               equal(f->binaryData.r, g->binaryData.r);
     }
 }
 
@@ -142,11 +138,11 @@ FormulaPtr substitute(FormulaPtr formula, FormulaPtr what, FormulaPtr with) {
     case Formula::Type::Atom:
         return formula;
     case Formula::Type::Not:
-        return Not(substitute(formula->data.notData.f, what, with));
+        return Not(substitute(formula->notData.f, what, with));
     case Formula::Type::Binary:
-        FormulaPtr lSub = substitute(formula->data.binaryData.l, what, with);
-        FormulaPtr rSub = substitute(formula->data.binaryData.r, what, with);
-        return Binary(formula->data.binaryData.type, lSub, rSub);
+        FormulaPtr lSub = substitute(formula->binaryData.l, what, with);
+        FormulaPtr rSub = substitute(formula->binaryData.r, what, with);
+        return Binary(formula->binaryData.type, lSub, rSub);
     }
 }
 
@@ -154,12 +150,12 @@ bool evaluate(FormulaPtr formula, const Valuation& val) {
     switch(formula->type) {
     case Formula::Type::False: return false;
     case Formula::Type::True:  return true;
-    case Formula::Type::Atom:  return val.at(formula->data.atomData.n);
-    case Formula::Type::Not:   return !evaluate(formula->data.notData.f, val);
+    case Formula::Type::Atom:  return val.at(formula->atomData.n);
+    case Formula::Type::Not:   return !evaluate(formula->notData.f, val);
     case Formula::Type::Binary:
-        bool lEval = evaluate(formula->data.binaryData.l, val);
-        bool rEval = evaluate(formula->data.binaryData.r, val);
-        switch(formula->data.binaryData.type) {
+        bool lEval = evaluate(formula->binaryData.l, val);
+        bool rEval = evaluate(formula->binaryData.r, val);
+        switch(formula->binaryData.type) {
         case BinaryData::Type::And:  return lEval && rEval;
         case BinaryData::Type::Or:   return lEval || rEval;
         case BinaryData::Type::Impl: return !lEval || rEval;
