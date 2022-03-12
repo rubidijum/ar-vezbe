@@ -1,4 +1,4 @@
-## 01 Dubina iskazne formule
+## 02 Porecivost i DNF
 
 Rok za predaju:  *17.3.2022* \
 Naslov mejla:    *[AR] Domaći zadatak 02_normalne_forme* \
