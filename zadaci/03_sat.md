@@ -1,6 +1,6 @@
 ## 03 Cajtinova transformacija i čist literal
 
-Rok za predaju:  *27.3.2022* \
+Rok za predaju:  *28.3.2022* \
 Naslov mejla:    *[AR] Domaći zadatak 03_sat* \
 U prilogu mejla: *Sve potrebne .cpp i .h datoteke*
 
