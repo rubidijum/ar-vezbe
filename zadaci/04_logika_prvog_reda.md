@@ -1,4 +1,4 @@
-## 03 Cajtinova transformacija i čist literal
+## 04 Preneks normalna forma
 
 Rok za predaju:  *15.4.2022* \
 Naslov mejla:    *[AR] Domaći zadatak 04_logika_prvog_reda* \
