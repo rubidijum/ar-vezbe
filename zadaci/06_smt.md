@@ -1,4 +1,4 @@
-## 04 Sistem nejednačina
+## 06 Sistem nejednačina
 
 Rok za predaju:  *28.5.2022* \
 Naslov mejla:    *[AR] Domaći zadatak 06_smt* \
