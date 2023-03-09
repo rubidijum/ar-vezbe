@@ -1,6 +1,6 @@
 ## 01 Iskazna logika
 
-Rok za predaju:  *19.3.2022* \
+Rok za predaju:  *19.3.2023* \
 Naslov mejla:    *[AR] Domaći zadatak 01_iskazna_logika* \
 U prilogu mejla: *dubina.cpp i sat.cpp (i dodatne datoteke po izboru)*
 
