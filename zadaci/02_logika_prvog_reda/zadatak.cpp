@@ -281,6 +281,65 @@ bool checkSignature(FormulaPtr f, const Signature& s) {
     }
 }
 
+// std::optional?
+bool equals(const std::vector<unsigned>& args){
+    return args[0] == args[1];
+}
+
+unsigned zero(const std::vector<unsigned>&){
+    return 0U;
+}
+
+unsigned next(const std::vector<unsigned>& args){
+    return (args[0] + 1) % 3;
+}
+
 int main() {
+    LStructure L;
+
+    L.signature.fun["0"] = 0U;
+    L.signature.fun["S"] = 1U;
+
+    L.signature.rel["="] = 2U;
+
+    L.domain = {0U, 1U, 2U};
+
+    L.functions["0"] = zero;
+    L.functions["S"] = next;
+
+    L.relations["="] = equals;
+
+    //Ax S(S(S(x))) = x
+    TermPtr x = std::make_shared<Term>(VariableData{"x"});
+    TermPtr Sx = std::make_shared<Term>(FunctionData{"S", {x}});
+    TermPtr S_Sx = std::make_shared<Term>(FunctionData{"S", {Sx}});
+    TermPtr S_S_Sx = std::make_shared<Term>(FunctionData{"S", {S_Sx}});
+    FormulaPtr eq = std::make_shared<Formula>(AtomData{"=", {S_S_Sx, x}});
+    FormulaPtr formula = std::make_shared<Formula>(QuantifierData{QuantifierData::All, "x", eq});
+
+    print(formula);
+    std::cout << "\n";
+    Valuation v_empty;
+    if(checkSignature(formula, L.signature)){
+        std::cout << "evaluated: " << evaluate(formula, L, v_empty) << "\n";
+    }else{
+        std::cout << "Invalid signature!\n";
+    }
+
+    // ~Ex 0 = S(x)
+    TermPtr nill = std::make_shared<Term>(FunctionData{"0", {}});
+    FormulaPtr eq_2 = std::make_shared<Formula>(AtomData{"=", {nill, Sx}});
+    FormulaPtr exists = std::make_shared<Formula>(QuantifierData{QuantifierData::Exists, "x", eq_2});
+    FormulaPtr not_exists = std::make_shared<Formula>(NegData{exists});
+
+    print(not_exists);
+    std::cout << "\n";
+
+    if(checkSignature(not_exists, L.signature)){
+        std::cout << "evaluated: " << evaluate(not_exists, L, v_empty) << "\n";
+    }else{
+        std::cout << "Invalid signature!\n";
+    }
+
     return 0;
 }
